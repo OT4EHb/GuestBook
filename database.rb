@@ -1,41 +1,29 @@
 # frozen_string_literal: true
 
-require 'sqlite3'
+require 'active_record'
 
-# database, table messages
-class Message
-  def initialize(database)
-    @db = SQLite3::Database.new "#{database}.db"
-    @db.results_as_hash = true
-    @db.execute <<-SQL
-      CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY,
-        author TEXT NOT NULL,
-        text TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    SQL
-  end
+ActiveRecord::Base.establish_connection(
+  adapter: 'sqlite3',
+  database: 'guestbook.db'
+)
 
-  def all
-    @db.execute <<-SQL
-        SELECT * FROM messages
-        ORDER BY created_at DESC
-    SQL
-  end
+# model message
+class Message < ActiveRecord::Base
+  validates :author,
+            presence: true
+  validates :text,
+            presence: true,
+            length: { minimum: 3 }
 
-  def create(author, text)
-    @db.execute("
-        INSERT INTO messages
-        (author, text)
-        VALUES (?, ?)",
-                [author, text])
-  end
+  default_scope { order(created_at: :desc) }
+end
 
-  def delete(id)
-    @db.execute("
-            DELETE FROM messages
-            WHERE id = ?",
-                [id])
+unless ActiveRecord::Base.connection.tables.include?('messages')
+  ActiveRecord::Schema.define do
+    create_table :messages do |t|
+      t.string :author, null: false
+      t.text :text, null: false
+      t.timestamps
+    end
   end
 end

@@ -4,25 +4,46 @@ require_relative 'database'
 
 # book
 class Book
-  def initialize(database)
-    @db = Message.new database
-  end
+  class << self
+    def add(author, text)
+      message = Message.create(author:, text:)
+      if message.persisted?
+        puts 'Message saved'
+      else
+        puts "Error #{message.errors.full_messages.join(', ')}"
+      end
+    end
 
-  def add(author, text)
-    @db.create(author, text)
-    puts 'Message saved'
-  end
+    def remove(id)
+      message = Message.find_by(id:)
+      if message
+        message.destroy
+        puts 'Deleted'
+      else
+        puts "No message with #{id}"
+      end
+    end
 
-  def remove(id)
-    @db.delete(id)
-    puts 'Deleted'
-  end
+    def search(keyword)
+      messages = Message.where('author LIKE ? OR text LIKE ?', "%#{keyword}%", "%#{keyword}%")
+      if messages.empty?
+        puts 'Not Found'
+      else
+        messages.each do |message|
+          show(message)
+        end
+      end
+    end
 
-  def show
-    puts '--- Messages ---'
-    @db.all.each do |message|
-      puts "##{message['id']} | #{message['author']} [#{message['created_at']}]"
-      puts message['text']
+    def show(message = nil)
+      if message
+        puts "##{message.id} | #{message.author} [#{message.created_at}]"
+        puts message.text
+      else
+        Message.all.each do |msg|
+          show(msg)
+        end
+      end
     end
   end
 end
@@ -31,26 +52,30 @@ def main_put
   puts '1. Show all'
   puts '2. Add message'
   puts '3. Delete message'
-  printf "4. Exit\n\n"
+  puts '4. Search message'
+  printf "5. Exit\n\n"
   printf 'Choose: '
 end
 
 if __FILE__ == $PROGRAM_NAME
-  book = Book.new 'guestbook'
   loop do
     main_put
     case readline.chomp
     when '1'
-      book.show
+      puts '--- Messages ---'
+      Book.show
     when '2'
       printf 'Author: '
       author = readline.chomp
       printf 'Text: '
-      book.add author, readline.chomp
+      Book.add author, readline.chomp
     when '3'
       printf 'Enter message number: '
-      book.remove(readline.to_i)
+      Book.remove(readline.to_i)
     when '4'
+      printf 'Enter keyword: '
+      Book.search(readline.chomp)
+    when '5'
       puts 'Exit'
       break
     else
