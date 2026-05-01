@@ -1,0 +1,4 @@
+AllCops:
+  DisplayCopNames: true
+  NewCops: enable
+  TargetRubyVersion: 4.0
