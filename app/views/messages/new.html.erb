@@ -1,0 +1,30 @@
+<h1>Новое сообщение</h1>
+
+<%= form_with model: @message, local: true do |form| %>
+  <% if @message.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(@message.errors.count, "error") %> prohibited this message from being saved:</h2>
+      <ul>
+        <% @message.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :author %>
+    <%= form.text_field :author %>
+  </div>
+
+  <div>
+    <%= form.label :text %>
+    <%= form.text_area :text %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
+
+<%= link_to 'Back', messages_path %>
